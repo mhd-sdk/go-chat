@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 
 	"github.com/gofiber/contrib/websocket"
@@ -10,12 +11,18 @@ import (
 )
 
 type wsMessage struct {
-	Action string      `json:"action"`
-	Data   interface{} `json:"data"`
+	Action  string      `json:"action"`
+	Payload interface{} `json:"payload"`
 }
 
 func WsHandler(c *websocket.Conn) {
 	username := c.Params("username")
+	isNameUnqique := services.IsUsernameAvailable(username)
+	if !isNameUnqique {
+		c.WriteMessage(websocket.TextMessage, []byte("Username is not unique"))
+		c.Close()
+		return
+	}
 	services.ConnectUser(username, c)
 
 	defer services.DisconnectUser(username)
@@ -34,15 +41,16 @@ func WsHandler(c *websocket.Conn) {
 			log.Println("read:", err)
 			break
 		}
+		fmt.Println(wsMessage)
 		switch wsMessage.Action {
 		case "addMessage":
-			newMessage := models.Message{Author: username, Content: wsMessage.Data.(string), Date: "now"}
+			newMessage := models.Message{Author: username, Content: wsMessage.Payload.(string), Date: "now"}
 			services.AddMessage(newMessage)
 		case "changePixel":
 			pixel := models.Pixel{}
-			pixel.X = int(wsMessage.Data.(map[string]interface{})["x"].(float64))
-			pixel.Y = int(wsMessage.Data.(map[string]interface{})["y"].(float64))
-			pixel.Color = wsMessage.Data.(map[string]interface{})["color"].(string)
+			pixel.X = int(wsMessage.Payload.(map[string]interface{})["x"].(float64))
+			pixel.Y = int(wsMessage.Payload.(map[string]interface{})["y"].(float64))
+			pixel.Color = wsMessage.Payload.(map[string]interface{})["color"].(string)
 			if err != nil {
 				log.Println("read:", err)
 				break
