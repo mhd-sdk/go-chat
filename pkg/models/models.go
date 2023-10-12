@@ -19,3 +19,11 @@ type ChatHandlerWsUpdate struct {
 	Messages    []Message `json:"messages"`
 	LoggedUsers UserList  `json:"loggedUsers"`
 }
+
+type Pixel struct {
+	X     int    `json:"x"`
+	Y     int    `json:"y"`
+	Color string `json:"color"`
+}
+
+type PixelMatrix [][]Pixel

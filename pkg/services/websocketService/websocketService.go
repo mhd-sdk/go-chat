@@ -1,4 +1,4 @@
-package chatservice
+package websocketService
 
 import (
 	"fmt"
@@ -9,18 +9,18 @@ import (
 	"github.com/mhd-sdk/go-chat/pkg/models"
 )
 
-var mu sync.Mutex
-var channel = []models.Message{}
+var Mu sync.Mutex
+var Channel = []models.Message{}
 var CurrentLoggedUsersChanged = make(chan bool)
-var clientsMap sync.Map
+var ClientsMap sync.Map
 
 func ConnectUser(username string, c *websocket.Conn) {
 	logging.Logger.Info("New user connected to chat: " + username)
-	clientsMap.Store(username, models.Client{Conn: c, Username: username})
+	ClientsMap.Store(username, models.Client{Conn: c, Username: username})
 
-	clientsMap.Range(func(key, value interface{}) bool {
+	ClientsMap.Range(func(key, value interface{}) bool {
 		client := value.(models.Client)
-		var wsUpdateMessage = models.ChatHandlerWsUpdate{Messages: channel, LoggedUsers: GetCurrentLoggedUsers()}
+		var wsUpdateMessage = models.ChatHandlerWsUpdate{Messages: Channel, LoggedUsers: GetCurrentLoggedUsers()}
 		err := client.Conn.WriteJSON(wsUpdateMessage)
 		if err != nil {
 			logging.Logger.Error("Error while sending message to client")
@@ -32,13 +32,13 @@ func ConnectUser(username string, c *websocket.Conn) {
 }
 
 func DisconnectUser(username string) {
-	user, _ := clientsMap.Load(username)
-	clientsMap.Delete(username)
+	user, _ := ClientsMap.Load(username)
+	ClientsMap.Delete(username)
 	logging.Logger.Info("User disconnected from chat: " + username)
 	// broadcast user left
-	clientsMap.Range(func(key, value interface{}) bool {
+	ClientsMap.Range(func(key, value interface{}) bool {
 		client := value.(models.Client)
-		var wsUpdateMessage = models.ChatHandlerWsUpdate{Messages: channel, LoggedUsers: GetCurrentLoggedUsers()}
+		var wsUpdateMessage = models.ChatHandlerWsUpdate{Messages: Channel, LoggedUsers: GetCurrentLoggedUsers()}
 		err := client.Conn.WriteJSON(wsUpdateMessage)
 		fmt.Println(username + " just left the chat")
 		if err != nil {
@@ -51,13 +51,13 @@ func DisconnectUser(username string) {
 }
 
 func AddMessage(message models.Message) {
-	mu.Lock()
-	channel = append(channel, message)
+	Mu.Lock()
+	Channel = append(Channel, message)
 	logging.Logger.Info("New message added to chat: " + message.Content)
-	mu.Unlock()
-	clientsMap.Range(func(key, value interface{}) bool {
+	Mu.Unlock()
+	ClientsMap.Range(func(key, value interface{}) bool {
 		client := value.(models.Client)
-		wsUpdateMessage := models.ChatHandlerWsUpdate{Messages: channel, LoggedUsers: GetCurrentLoggedUsers()}
+		wsUpdateMessage := models.ChatHandlerWsUpdate{Messages: Channel, LoggedUsers: GetCurrentLoggedUsers()}
 		err := client.Conn.WriteJSON(wsUpdateMessage)
 		if err != nil {
 			logging.Logger.Error("Error while sending message to client")
@@ -69,10 +69,15 @@ func AddMessage(message models.Message) {
 
 func GetCurrentLoggedUsers() []string {
 	var users []string = []string{}
-	clientsMap.Range(func(key, value interface{}) bool {
+	ClientsMap.Range(func(key, value interface{}) bool {
 		client := value.(models.Client)
 		users = append(users, client.Username)
 		return true
 	})
 	return users
+}
+
+func IsUsernameAvailable(username string) bool {
+	_, ok := ClientsMap.Load(username)
+	return !ok
 }

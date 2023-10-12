@@ -24,5 +24,7 @@ func main() {
 
 	app.Get("/chat/:username", websocket.New(handlers.ChatHandler))
 
-	log.Fatal(app.Listen(":3000"))
+	app.Get("/pixelwar/:username", websocket.New(handlers.PixelwarHandler))
+
+	log.Fatal(app.Listen("127.0.0.1:3000"))
 }
