@@ -16,8 +16,9 @@ type Message struct {
 type UserList []string
 
 type ChatHandlerWsUpdate struct {
-	Messages    []Message `json:"messages"`
-	LoggedUsers UserList  `json:"loggedUsers"`
+	Messages    []Message   `json:"messages"`
+	LoggedUsers UserList    `json:"loggedUsers"`
+	PixelMatrix PixelMatrix `json:"pixelMatrix"`
 }
 
 type Pixel struct {
