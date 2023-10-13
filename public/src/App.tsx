@@ -16,7 +16,7 @@ function App() {
   const [userName, setUserName] = useState("");
   const [opened, setOpened] = useState(true);
   const { sendMessage, lastMessage, readyState } = useWebSocket(
-    `ws://localhost:3000/pixelwar/${userName}`
+    `ws://pixelwarback.mehdiseddik.com/pixelwar/${userName}`
   );
   const [messages, setMessages] = useState<{ author: string, content: string }[]>([]);
   const [currentLoggedUsers, setCurrentLoggedUsers] = useState<string[]>([]);

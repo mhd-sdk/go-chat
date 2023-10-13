@@ -22,7 +22,7 @@ export const LoginStepper = ({ onClose }: Props): JSX.Element => {
       setLoading(false);
       return;
     }
-    fetch(`http://localhost:3000/nameisunique/${debounced}`)
+    fetch(`http://pixelwarback.mehdiseddik.com/nameisunique/${debounced}`)
    .then(response => response.json())
    .then(data => {
       if (data === "false") {
