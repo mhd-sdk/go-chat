@@ -20,6 +20,8 @@ func InitPixelMatrix() {
 }
 
 func ChangePixelColor(x int, y int, color string) {
+	Mu.Lock()
 	PixelMatrix[x][y].Color = color
+	Mu.Unlock()
 	UpdateClients()
 }
